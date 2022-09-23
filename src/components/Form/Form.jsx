@@ -1,16 +1,21 @@
 import { useState } from 'react';
+import { addItem } from 'redux/itemsSlice';
+import { useDispatch, useSelector } from 'react-redux';
 import s from './Form.module.css';
+import { toast } from 'react-toastify';
 const shortid = require('shortid');
 
-const Form = ({ onSubmit }) => {
-  const [userName, setUserName] = useState('');
+const Form = () => {
+  const [name, setUserName] = useState('');
   const [number, setNumber] = useState('');
+  const dispatch = useDispatch();
+  const contacts = useSelector(state => state.items);
 
   const handleChangeUser = ev => {
     const { name, value } = ev.target;
 
     switch (name) {
-      case 'userName':
+      case 'name':
         setUserName(value);
         // eslint-disable-next-line
         break;
@@ -28,11 +33,18 @@ const Form = ({ onSubmit }) => {
   const handleAddUser = e => {
     e.preventDefault();
 
-    onSubmit({ userName, number, id: shortid.generate() });
+    const hasUserContacts = contacts.some(user => user.name === name);
+
+    if (hasUserContacts) {
+      toast.error(`${name} is already in contacts`);
+      return;
+    }
+
+    dispatch(addItem({ name, number, id: shortid.generate() }));
     setNumber('');
     setUserName('');
   };
-  
+
   return (
     <form className={s.form} onSubmit={handleAddUser}>
       <label>
@@ -40,8 +52,8 @@ const Form = ({ onSubmit }) => {
         <input
           className={s.input}
           type="text"
-          value={userName}
-          name="userName"
+          value={name}
+          name="name"
           pattern="^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$"
           title="Name may contain only letters, apostrophe, dash and spaces. For example Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan"
           required
